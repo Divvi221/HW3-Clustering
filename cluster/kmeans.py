@@ -32,6 +32,7 @@ class KMeans:
         self.centroids =  None
         self.data = None
         self.assignments = None
+        self.mse = None
 
     def fit(self, mat: np.ndarray):
         """
@@ -57,11 +58,21 @@ class KMeans:
         self.centroids = mat[r_int] #initial centroids
         #print(self.centroids)
         for i in range(self.max_iter):
-            distances = cdist(mat, self.centroids,'euclidean')
-            #print(distances)
-            nearest_c = np.argmin(distances, axis=1) #find min 
-            print(nearest_c)
-            new_c = np.array([mat[nearest_c == k].mean(axis=0) for k in range(self.k)])
+            dist = cdist(mat, self.centroids,'euclidean')
+            #print(dist)
+            nearest_c = np.argmin(dist, axis=1) #find min distance for each centroid (i corresponds to j centroid)
+            #print(nearest_c)
+            #print(nearest_c) finds min in each row and outputs [1 1 0 0 0] because in the first two rows the second element is lowest and so first 2 data points closer to first centroid and last 3 closer to second centroid
+            #new_c = np.array([mat[nearest_c == k].mean(axis=0) for k in range(self.k)])
+            new_c_list = []
+            for j in range(self.k):
+                #print(j)
+                c_points = mat[nearest_c==j] #data points assigned to jth cluster
+                #print(c_points)
+                c_centroid = c_points.mean(axis=0) #calculation of the centroid of the current cluster points
+                #print(c_centroid)
+                new_c_list.append(c_centroid)
+            new_c = np.array(new_c_list)
             if np.allclose(self.centroids, new_c, atol=self.tol):
                 break
             self.centroids = new_c
@@ -105,8 +116,8 @@ class KMeans:
         dist = cdist(self.data, self.centroids)
         assigned_distances = dist[np.arange(len(self.assignments)), self.assignments]
         squared_distances = assigned_distances ** 2
-        mean_squared_error = np.mean(squared_distances)
-        return mean_squared_error
+        self.mse = np.mean(squared_distances)
+        return self.mse
 
     def get_centroids(self) -> np.ndarray:
         """
